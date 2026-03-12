@@ -74,13 +74,15 @@ export function MainContent({ user, project }: MainContentProps) {
                   <HeaderActions user={user} projectId={project?.id} />
                 </div>
 
-                {/* Content Area */}
-                <div className="flex-1 overflow-hidden bg-neutral-50">
-                  {activeView === "preview" ? (
-                    <div className="h-full bg-white">
-                      <PreviewFrame />
-                    </div>
-                  ) : (
+                {/* Content Area — both panels stay mounted; CSS visibility controls which is shown */}
+                <div className="flex-1 overflow-hidden bg-neutral-50 relative">
+                  {/* Preview Panel */}
+                  <div className={`absolute inset-0 bg-white${activeView !== "preview" ? " invisible pointer-events-none" : ""}`}>
+                    <PreviewFrame />
+                  </div>
+
+                  {/* Code Panel */}
+                  <div className={`absolute inset-0${activeView !== "code" ? " invisible pointer-events-none" : ""}`}>
                     <ResizablePanelGroup
                       direction="horizontal"
                       className="h-full"
@@ -105,7 +107,7 @@ export function MainContent({ user, project }: MainContentProps) {
                         </div>
                       </ResizablePanel>
                     </ResizablePanelGroup>
-                  )}
+                  </div>
                 </div>
               </div>
             </ResizablePanel>

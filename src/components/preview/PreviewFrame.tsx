@@ -13,17 +13,13 @@ export function PreviewFrame() {
   const { getAllFiles, refreshTrigger } = useFileSystem();
   const [error, setError] = useState<string | null>(null);
   const [entryPoint, setEntryPoint] = useState<string>("/App.jsx");
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  // Use a ref so that changes to this flag don't re-trigger the effect
+  const isFirstLoadRef = useRef(true);
 
   useEffect(() => {
     const updatePreview = () => {
       try {
         const files = getAllFiles();
-
-        // Clear error first when we have files
-        if (files.size > 0 && error) {
-          setError(null);
-        }
 
         // Find the entry point - look for App.jsx, App.tsx, index.jsx, or index.tsx
         let foundEntryPoint = entryPoint;
@@ -54,18 +50,12 @@ export function PreviewFrame() {
         }
 
         if (files.size === 0) {
-          if (isFirstLoad) {
-            setError("firstLoad");
-          } else {
-            setError("No files to preview");
-          }
+          setError(isFirstLoadRef.current ? "firstLoad" : "No files to preview");
           return;
         }
 
         // We have files, so it's no longer the first load
-        if (isFirstLoad) {
-          setIsFirstLoad(false);
-        }
+        isFirstLoadRef.current = false;
 
         if (!foundEntryPoint || !files.has(foundEntryPoint)) {
           setError(
@@ -96,7 +86,10 @@ export function PreviewFrame() {
     };
 
     updatePreview();
-  }, [refreshTrigger, getAllFiles, entryPoint, error, isFirstLoad]);
+  // Removed `error` and `isFirstLoad` from deps: they are set inside this effect,
+  // so including them would cause unnecessary re-runs after each state update.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger, getAllFiles, entryPoint]);
 
   if (error) {
     if (error === "firstLoad") {
